@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CelestialType {
+  STAR
+  PLANET
+  DWARF_PLANET
+  MOON
+  ASTEROID
+  COMET
+  NEBULA
+  GALAXY
+  CONSTELLATION
+  OTHER
+}
+
+enum CertStatus {
+  PENDING
+  PAID
+  GENERATED
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  name          String?
+  lastName      String?
+  passwordHash  String
+  emailVerified DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  certificates  Certificate[]
+}
+
+model CelestialBody {
+  id                 String        @id @default(cuid())
+  internalCode       String        @unique
+  simbadId           String?       @unique
+  officialName       String?
+  designation        String?
+  commonName         String?
+  type               CelestialType
+  constellation      String?
+  rightAscension     String?
+  declination        String?
+  magnitude          Float?
+  spectralType       String?
+  distanceLightYears Float?
+  description        String?
+  imageUrl           String?
+  isAvailable        Boolean       @default(true)
+  source             String?       @default("SIMBAD (CDS Strasbourg)")
+  certificates       Certificate[]
+}
+
+model Certificate {
+  id              String        @id @default(cuid())
+  uniqueCode      String        @unique
+  userId          String
+  celestialBodyId String
+  symbolicName    String
+  recipientName   String
+  recipientEmail  String?
+  message         String?
+  status          CertStatus    @default(PENDING)
+  issuedAt        DateTime?
+  pdfUrl          String?
+  paymentId       String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  user            User          @relation(fields: [userId], references: [id])
+  celestialBody   CelestialBody @relation(fields: [celestialBodyId], references: [id])
+}
